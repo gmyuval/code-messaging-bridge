@@ -120,7 +120,7 @@ def test_full_pipeline_success(
 @patch("code_messaging_bridge.services.claude.runner.subprocess.run")
 def test_full_pipeline_session_continuity(
     mock_subprocess: MagicMock,
-    mock_send: MagicMock,
+    _mock_send: MagicMock,
     sync_session: Session,
     conversation: Conversation,
     mock_settings: MagicMock,
@@ -181,7 +181,7 @@ def test_full_pipeline_session_continuity(
 @patch("code_messaging_bridge.services.claude.runner.subprocess.run")
 def test_full_pipeline_long_response_split(
     mock_subprocess: MagicMock,
-    mock_send: MagicMock,
+    _mock_send: MagicMock,
     sync_session: Session,
     conversation: Conversation,
     mock_settings: MagicMock,

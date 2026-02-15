@@ -92,7 +92,7 @@ def test_process_message_success(
     mock_runner.invoke_with_retry.assert_called_once()
     invocation = mock_runner.invoke_with_retry.call_args[0][0]
     assert invocation.prompt == "What files are here?"
-    assert invocation.working_directory == "test-project"
+    assert invocation.working_directory == conversation.working_directory
 
     # Verify session ID was updated
     sync_session.refresh(conversation)

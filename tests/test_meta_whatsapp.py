@@ -169,7 +169,7 @@ async def test_send_message_long_is_split(mock_client_cls: MagicMock) -> None:
 
     call_count = 0
 
-    async def mock_post(*args: Any, **kwargs: Any) -> MagicMock:
+    async def mock_post(*_args: Any, **_kwargs: Any) -> MagicMock:
         nonlocal call_count
         call_count += 1
         resp = MagicMock()

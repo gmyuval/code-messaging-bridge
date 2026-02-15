@@ -131,28 +131,28 @@ class MetaWhatsAppProvider(MessagingProvider):
             "Content-Type": "application/json",
         }
 
-        for part in parts:
-            payload = {
-                "messaging_product": "whatsapp",
-                "recipient_type": "individual",
-                "to": message.recipient_id,
-                "type": "text",
-                "text": {"body": part},
-            }
-            try:
-                async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient() as client:
+            for part in parts:
+                payload = {
+                    "messaging_product": "whatsapp",
+                    "recipient_type": "individual",
+                    "to": message.recipient_id,
+                    "type": "text",
+                    "text": {"body": part},
+                }
+                try:
                     resp = await client.post(
                         url, json=payload, headers=headers, timeout=30
                     )
                     resp.raise_for_status()
                     data = resp.json()
                     last_message_id = data.get("messages", [{}])[0].get("id")
-            except Exception:
-                logger.exception("Failed to send WhatsApp message via Meta API")
-                return SendResult(
-                    success=False,
-                    error_message="Failed to send message via Meta API",
-                )
+                except Exception:
+                    logger.exception("Failed to send WhatsApp message via Meta API")
+                    return SendResult(
+                        success=False,
+                        error_message="Failed to send message via Meta API",
+                    )
 
         return SendResult(
             success=True,

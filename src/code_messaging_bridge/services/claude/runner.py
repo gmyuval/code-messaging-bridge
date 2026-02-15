@@ -119,7 +119,7 @@ class ClaudeCodeRunner:
                 logger.info("Retrying Claude CLI in %d seconds (attempt %d)", backoff, attempt + 2)
                 time.sleep(backoff)
 
-        assert last_result is not None  # noqa: S101
+        assert last_result is not None
         return last_result
 
     @staticmethod

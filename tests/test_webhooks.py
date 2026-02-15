@@ -74,7 +74,7 @@ async def test_webhook_enqueues_task(
     client: AsyncClient,
     app: Any,
     mock_whatsapp_provider: MagicMock,
-    async_session: AsyncSession,
+    async_session: AsyncSession,  # noqa: ARG001
 ) -> None:
     """Webhook should enqueue a Celery task for Claude processing."""
     from code_messaging_bridge.api.dependencies import get_whatsapp_provider
@@ -102,7 +102,7 @@ async def test_webhook_enqueues_task(
 @pytest.mark.asyncio
 @patch("code_messaging_bridge.api.webhooks.process_whatsapp_message")
 async def test_webhook_stores_inbound_message(
-    mock_task: MagicMock,
+    _mock_task: MagicMock,
     client: AsyncClient,
     app: Any,
     mock_whatsapp_provider: MagicMock,

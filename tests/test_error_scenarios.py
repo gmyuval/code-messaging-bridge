@@ -115,7 +115,7 @@ def test_retry_does_not_retry_on_file_not_found(mock_run: MagicMock) -> None:
 
 @patch("code_messaging_bridge.services.claude.runner.subprocess.run")
 @patch("code_messaging_bridge.services.claude.runner.time.sleep")
-def test_retry_exhausted(mock_sleep: MagicMock, mock_run: MagicMock) -> None:
+def test_retry_exhausted(_mock_sleep: MagicMock, mock_run: MagicMock) -> None:
     """Should return failure after all retries are exhausted."""
     from code_messaging_bridge.services.claude.schemas import ClaudeInvocation
 
@@ -141,7 +141,7 @@ async def test_webhook_rejects_non_whitelisted_number(
     mock_task: MagicMock,
     client: Any,
     app: Any,
-    async_session: Any,
+    async_session: Any,  # noqa: ARG001
 ) -> None:
     """Should reject messages from numbers not in the whitelist."""
     from datetime import UTC, datetime
@@ -194,7 +194,7 @@ async def test_webhook_rate_limits(
     mock_task: MagicMock,
     client: Any,
     app: Any,
-    async_session: Any,
+    async_session: Any,  # noqa: ARG001
 ) -> None:
     """Should return 429 when rate limit is exceeded."""
     from datetime import UTC, datetime

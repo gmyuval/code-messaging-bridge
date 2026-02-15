@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends
@@ -11,6 +12,8 @@ from code_messaging_bridge.api.dependencies import get_async_session
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -24,7 +27,8 @@ async def health_check(
     try:
         await db.execute(text("SELECT 1"))
     except Exception as e:
-        db_status = f"error: {e}"
+        logger.warning("Database health check failed: %s", e)
+        db_status = "unavailable"
 
     status = "healthy" if db_status == "connected" else "unhealthy"
     return {"status": status, "database": db_status}

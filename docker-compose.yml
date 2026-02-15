@@ -34,7 +34,8 @@ services:
       CMB_DATABASE_URL_SYNC: postgresql+psycopg2://cmb:cmb@db:5432/cmb
       CMB_REDIS_URL: redis://redis:6379/0
     env_file:
-      - .env
+      - path: .env
+        required: false
     depends_on:
       db:
         condition: service_healthy

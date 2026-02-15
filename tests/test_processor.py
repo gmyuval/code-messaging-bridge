@@ -71,7 +71,7 @@ def test_process_message_success(
 ) -> None:
     """Should invoke Claude, store outbound message, and send response."""
     mock_runner = MagicMock()
-    mock_runner.invoke.return_value = ClaudeResult(
+    mock_runner.invoke_with_retry.return_value = ClaudeResult(
         success=True,
         output="Here is the answer.",
         session_id="sess-new-123",
@@ -89,8 +89,8 @@ def test_process_message_success(
     sync_session.commit()
 
     # Verify Claude was called
-    mock_runner.invoke.assert_called_once()
-    invocation = mock_runner.invoke.call_args[0][0]
+    mock_runner.invoke_with_retry.assert_called_once()
+    invocation = mock_runner.invoke_with_retry.call_args[0][0]
     assert invocation.prompt == "What files are here?"
     assert invocation.working_directory == "/tmp/project"
 
@@ -124,7 +124,7 @@ def test_process_message_claude_error(
 ) -> None:
     """Should send error message when Claude fails."""
     mock_runner = MagicMock()
-    mock_runner.invoke.return_value = ClaudeResult(
+    mock_runner.invoke_with_retry.return_value = ClaudeResult(
         success=False,
         output="",
         error_message="CLI timed out",
@@ -169,7 +169,7 @@ def test_process_message_resumes_session(
     sync_session.commit()
 
     mock_runner = MagicMock()
-    mock_runner.invoke.return_value = ClaudeResult(
+    mock_runner.invoke_with_retry.return_value = ClaudeResult(
         success=True,
         output="Follow-up answer.",
         session_id="existing-session-abc",
@@ -183,7 +183,7 @@ def test_process_message_resumes_session(
         platform_user_id="whatsapp:+1234567890",
     )
 
-    invocation = mock_runner.invoke.call_args[0][0]
+    invocation = mock_runner.invoke_with_retry.call_args[0][0]
     assert invocation.session_id == "existing-session-abc"
 
 

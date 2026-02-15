@@ -71,11 +71,22 @@ The Celery worker runs on the HOST machine (not Docker) because Claude Code CLI 
   - `services/claude/` — Claude Code CLI subprocess wrapper
   - `workers/` — Celery tasks
 
+## Key Components
+
+- `ClaudeCodeRunner` — wraps `claude -p` subprocess with JSON parsing, `--resume` for session continuity, retry with exponential backoff
+- `MessageProcessor` — sync orchestrator for Celery: load conversation → invoke Claude → format → send → store
+- `DatabaseTask` — Celery Task base class that initializes DB session factory once per worker
+- `RateLimiter` — in-memory sliding-window rate limiter for webhook endpoints
+- `ResponseFormatter` — converts Claude markdown output to WhatsApp-friendly text
+- `MessageSplitter` — splits messages exceeding 1600 chars at paragraph/sentence/word boundaries
+
 ## Conventions
 
 - All code uses type annotations; enforced by mypy (strict mode) and ruff
 - SQLAlchemy models use `Mapped[]` annotations with mixins (`UUIDPrimaryKeyMixin`, `TimestampMixin`)
 - Model files exempt from TCH rules (SQLAlchemy needs runtime type imports for `Mapped[]`)
 - FastAPI API files exempt from B008 (`Depends()` in defaults is standard pattern)
+- Celery tasks exempt from misc/untyped-decorator mypy rules (Celery lacks type stubs)
 - Config loaded via `CMB_` prefixed env vars (see `.env.example`)
 - Tests use SQLite in-memory via aiosqlite (JSON instead of JSONB for cross-dialect compat)
+- Processor tests use sync SQLite sessions (matching Celery's sync context)

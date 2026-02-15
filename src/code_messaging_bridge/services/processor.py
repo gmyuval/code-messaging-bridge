@@ -58,8 +58,8 @@ class MessageProcessor:
             max_turns=self._settings.claude_max_turns,
         )
 
-        # 3. Invoke Claude
-        result = self._runner.invoke(invocation)
+        # 3. Invoke Claude (with retry on transient failures)
+        result = self._runner.invoke_with_retry(invocation)
         logger.info(
             "Claude result: success=%s, cost=$%s, turns=%s",
             result.success,

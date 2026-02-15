@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import subprocess
+import time
 from typing import TYPE_CHECKING
 
 from code_messaging_bridge.services.claude.schemas import ClaudeResult
@@ -20,6 +21,8 @@ class ClaudeCodeRunner:
     """Invokes the Claude Code CLI as a subprocess and parses its JSON output."""
 
     _DEFAULT_TIMEOUT = 600  # 10 minutes
+    _MAX_RETRIES = 2
+    _BASE_BACKOFF = 5  # seconds
 
     def __init__(self, settings: Settings) -> None:
         self._cli_path = settings.claude_cli_path
@@ -85,6 +88,35 @@ class ClaudeCodeRunner:
             )
 
         return self._parse_output(result.stdout)
+
+    def invoke_with_retry(self, invocation: ClaudeInvocation) -> ClaudeResult:
+        """Invoke Claude CLI with automatic retries on transient failures.
+
+        Retries on non-zero exit codes with exponential backoff.
+        Does NOT retry on timeout (would take too long) or file-not-found.
+        """
+        last_result: ClaudeResult | None = None
+        for attempt in range(self._MAX_RETRIES + 1):
+            result = self.invoke(invocation)
+
+            if result.success:
+                return result
+
+            last_result = result
+
+            # Don't retry on timeout or missing CLI
+            if result.error_message and (
+                "timed out" in result.error_message or "not found" in result.error_message
+            ):
+                return result
+
+            if attempt < self._MAX_RETRIES:
+                backoff = self._BASE_BACKOFF * (2**attempt)
+                logger.info("Retrying Claude CLI in %d seconds (attempt %d)", backoff, attempt + 2)
+                time.sleep(backoff)
+
+        assert last_result is not None  # noqa: S101
+        return last_result
 
     @staticmethod
     def _parse_output(stdout: str) -> ClaudeResult:

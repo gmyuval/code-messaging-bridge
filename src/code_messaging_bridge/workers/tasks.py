@@ -75,6 +75,25 @@ def process_whatsapp_message(
         except Exception:
             session.rollback()
             logger.exception("Failed to process message for conversation %s", conversation_id)
+            _send_error_message(self.settings, platform_user_id)
             raise
 
     return {"status": "completed", "conversation_id": conversation_id}
+
+
+def _send_error_message(settings: Settings, recipient_id: str) -> None:
+    """Send a user-friendly error message via WhatsApp when processing fails."""
+    try:
+        from twilio.rest import Client
+
+        client = Client(settings.twilio_account_sid, settings.twilio_auth_token)
+        client.messages.create(
+            body=(
+                "Sorry, something went wrong while processing your message. "
+                "Please try again in a moment."
+            ),
+            from_=f"whatsapp:{settings.twilio_whatsapp_number}",
+            to=recipient_id,
+        )
+    except Exception:
+        logger.exception("Failed to send error message to %s", recipient_id)

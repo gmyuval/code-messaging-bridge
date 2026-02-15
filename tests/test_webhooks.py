@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from sqlalchemy import select
@@ -23,7 +23,6 @@ def mock_twilio_provider() -> MagicMock:
     from code_messaging_bridge.services.messaging.schemas import (
         InboundMessage,
         Platform,
-        SendResult,
         WebhookValidationResult,
     )
 
@@ -39,20 +38,19 @@ def mock_twilio_provider() -> MagicMock:
             raw_payload={"Body": "Hello Claude!", "From": "whatsapp:+1234567890"},
         )
     )
-    provider.send_message = AsyncMock(
-        return_value=SendResult(success=True, platform_message_id="SM_ECHO_456", parts_sent=1)
-    )
     return provider
 
 
 @pytest.mark.asyncio
-async def test_webhook_echo_bot(
+@patch("code_messaging_bridge.api.webhooks.process_whatsapp_message")
+async def test_webhook_enqueues_task(
+    mock_task: MagicMock,
     client: AsyncClient,
     app: Any,
     mock_twilio_provider: MagicMock,
     async_session: AsyncSession,
 ) -> None:
-    """Webhook should receive message, store it, and echo back."""
+    """Webhook should enqueue a Celery task for Claude processing."""
     from code_messaging_bridge.api.dependencies import get_whatsapp_provider
 
     app.dependency_overrides[get_whatsapp_provider] = lambda: mock_twilio_provider
@@ -66,23 +64,25 @@ async def test_webhook_echo_bot(
     assert response.headers["content-type"] == "application/xml"
     assert "<Response/>" in response.text
 
-    # Verify message was sent back
-    mock_twilio_provider.send_message.assert_called_once()
-    call_args = mock_twilio_provider.send_message.call_args
-    sent_message = call_args[0][0]
-    assert sent_message.content == "Echo: Hello Claude!"
+    # Verify Celery task was enqueued
+    mock_task.delay.assert_called_once()
+    call_args = mock_task.delay.call_args
+    assert call_args[0][1] == "Hello Claude!"  # content
+    assert call_args[0][2] == "whatsapp:+1234567890"  # platform_user_id
 
     app.dependency_overrides.pop(get_whatsapp_provider, None)
 
 
 @pytest.mark.asyncio
-async def test_webhook_stores_messages(
+@patch("code_messaging_bridge.api.webhooks.process_whatsapp_message")
+async def test_webhook_stores_inbound_message(
+    mock_task: MagicMock,
     client: AsyncClient,
     app: Any,
     mock_twilio_provider: MagicMock,
     async_session: AsyncSession,
 ) -> None:
-    """Webhook should store both inbound and outbound messages in DB."""
+    """Webhook should store the inbound message in DB before enqueuing task."""
     from code_messaging_bridge.api.dependencies import get_whatsapp_provider
 
     app.dependency_overrides[get_whatsapp_provider] = lambda: mock_twilio_provider
@@ -98,14 +98,12 @@ async def test_webhook_stores_messages(
     assert len(conversations) == 1
     assert conversations[0].platform == "whatsapp"
 
-    # Check messages were stored
-    msg_result = await async_session.execute(select(Message).order_by(Message.created_at))
+    # Check inbound message was stored (outbound handled by Celery worker)
+    msg_result = await async_session.execute(select(Message))
     messages = msg_result.scalars().all()
-    assert len(messages) == 2
+    assert len(messages) == 1
     assert messages[0].direction == MessageDirection.INBOUND
     assert messages[0].content == "Hello Claude!"
-    assert messages[1].direction == MessageDirection.OUTBOUND
-    assert "Echo:" in messages[1].content
 
     app.dependency_overrides.pop(get_whatsapp_provider, None)
 
@@ -139,7 +137,9 @@ async def test_webhook_rejects_invalid_signature(
 
 
 @pytest.mark.asyncio
+@patch("code_messaging_bridge.api.webhooks.process_whatsapp_message")
 async def test_webhook_creates_conversation_once(
+    mock_task: MagicMock,
     client: AsyncClient,
     app: Any,
     mock_twilio_provider: MagicMock,
@@ -161,13 +161,16 @@ async def test_webhook_creates_conversation_once(
     )
 
     # Should still be one conversation
-    result = await async_session.execute(select(Conversation))
-    conversations = result.scalars().all()
+    conv_result = await async_session.execute(select(Conversation))
+    conversations = conv_result.scalars().all()
     assert len(conversations) == 1
 
-    # But 4 messages (2 inbound + 2 outbound)
-    result = await async_session.execute(select(Message))
-    messages = result.scalars().all()
-    assert len(messages) == 4
+    # 2 inbound messages (outbound handled by Celery worker)
+    msg_result = await async_session.execute(select(Message))
+    messages = msg_result.scalars().all()
+    assert len(messages) == 2
+
+    # Both tasks enqueued
+    assert mock_task.delay.call_count == 2
 
     app.dependency_overrides.pop(get_whatsapp_provider, None)

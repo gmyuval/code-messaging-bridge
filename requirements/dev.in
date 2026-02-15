@@ -1,0 +1,10 @@
+-c base.txt
+pytest>=8.3
+pytest-asyncio>=0.25
+pytest-cov>=6.0
+httpx>=0.28
+ruff>=0.9
+mypy>=1.14
+pre-commit>=4.0
+factory-boy>=3.3
+types-redis>=4.6

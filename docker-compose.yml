@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: cmb
+      POSTGRES_PASSWORD: cmb
+      POSTGRES_DB: cmb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cmb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      CMB_DATABASE_URL: postgresql+asyncpg://cmb:cmb@db:5432/cmb
+      CMB_DATABASE_URL_SYNC: postgresql+psycopg2://cmb:cmb@db:5432/cmb
+      CMB_REDIS_URL: redis://redis:6379/0
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pgdata:

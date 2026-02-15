@@ -62,4 +62,8 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_conversations_platform_user_id'), table_name='conversations')
     op.drop_index(op.f('ix_conversations_platform'), table_name='conversations')
     op.drop_table('conversations')
+
+    # Drop PostgreSQL enum types created by upgrade
+    op.execute("DROP TYPE IF EXISTS messagedirection")
+    op.execute("DROP TYPE IF EXISTS messagestatus")
     # ### end Alembic commands ###

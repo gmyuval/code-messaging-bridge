@@ -28,7 +28,8 @@ async def health_check(
     try:
         await db.execute(text("SELECT 1"))
     except Exception as e:
-        db_status = f"error: {e}"
+        logger.warning("Database health check failed: %s", e)
+        db_status = "unavailable"
 
     redis_status = _check_redis()
     celery_status = _check_celery()

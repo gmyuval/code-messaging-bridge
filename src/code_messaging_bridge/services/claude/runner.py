@@ -50,7 +50,11 @@ class ClaudeCodeRunner:
     def invoke(self, invocation: ClaudeInvocation) -> ClaudeResult:
         """Run the Claude CLI and return the parsed result."""
         cmd = self._build_command(invocation)
-        logger.info("Running Claude CLI: %s ...", " ".join(cmd[:6]))
+        logger.info(
+            "Running Claude CLI (prompt_len=%d, session_id=%s)",
+            len(invocation.prompt),
+            invocation.session_id,
+        )
 
         try:
             result = subprocess.run(  # noqa: S603

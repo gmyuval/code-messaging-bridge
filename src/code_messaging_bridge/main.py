@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     """Application lifespan: initialize and clean up resources."""
     yield
     await get_db_manager().close()

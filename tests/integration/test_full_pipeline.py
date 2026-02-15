@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 import json
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 import pytest
 from sqlalchemy import create_engine, select
@@ -32,12 +36,12 @@ def sync_session() -> Session:
 
 
 @pytest.fixture
-def conversation(sync_session: Session) -> Conversation:
+def conversation(sync_session: Session, tmp_path: Path) -> Conversation:
     """Create a test conversation for integration tests."""
     conv = Conversation(
         platform="whatsapp",
         platform_user_id="whatsapp:+1234567890",
-        working_directory="/tmp/project",
+        working_directory=str(tmp_path),
         is_active=True,
     )
     sync_session.add(conv)
@@ -52,8 +56,8 @@ def mock_settings() -> MagicMock:
     settings.claude_cli_path = "claude"
     settings.claude_max_turns = 10
     settings.meta_phone_number_id = "123456789"
-    settings.meta_access_token = "test_access_token"
-    settings.meta_app_secret = "test_app_secret"
+    settings.meta_access_token = "test_access_token"  # noqa: S105
+    settings.meta_app_secret = "test_app_secret"  # noqa: S105
     return settings
 
 

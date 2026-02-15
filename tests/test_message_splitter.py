@@ -100,7 +100,7 @@ def test_part_indicators_correct() -> None:
 def test_default_max_length_is_1600() -> None:
     """Default max_length should be 1600 (WhatsApp limit)."""
     splitter = MessageSplitter()
-    assert splitter._max_length == 1600  # noqa: SLF001
+    assert splitter._max_length == 1600
 
 
 def test_unicode_messages() -> None:

@@ -79,14 +79,19 @@ class MessageProcessor:
             response_text = f"Sorry, I encountered an error: {result.error_message}"
 
         # 6. Send via Meta WhatsApp API
-        self._send_whatsapp_response(platform_user_id, response_text)
+        try:
+            self._send_whatsapp_response(platform_user_id, response_text)
+            delivery_status = MessageStatus.SENT
+        except Exception:
+            logger.exception("Failed to send WhatsApp response to %s", platform_user_id)
+            delivery_status = MessageStatus.FAILED
 
         # 7. Store outbound message
         outbound = Message(
             conversation_id=conversation_id,
             direction=MessageDirection.OUTBOUND,
             content=response_text,
-            status=MessageStatus.SENT,
+            status=delivery_status,
         )
         self._session.add(outbound)
         self._session.flush()
@@ -112,4 +117,5 @@ class MessageProcessor:
                 "type": "text",
                 "text": {"body": part},
             }
-            httpx.post(url, json=payload, headers=headers, timeout=30)
+            response = httpx.post(url, json=payload, headers=headers, timeout=30)
+            response.raise_for_status()

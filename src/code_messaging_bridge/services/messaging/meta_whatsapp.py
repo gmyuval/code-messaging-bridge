@@ -84,15 +84,23 @@ class MetaWhatsAppProvider(MessagingProvider):
             )
         return WebhookValidationResult(is_valid=True)
 
-    async def parse_inbound(self, request: Request) -> InboundMessage:
-        """Parse Meta webhook JSON payload into an InboundMessage."""
+    async def parse_inbound(self, request: Request) -> InboundMessage | None:
+        """Parse Meta webhook JSON payload into an InboundMessage.
+
+        Returns None for non-message payloads (status updates, delivery receipts, etc.).
+        """
         payload = await request.json()
 
-        # Navigate: entry[0].changes[0].value
-        entry = payload["entry"][0]
-        change = entry["changes"][0]
-        value = change["value"]
-        message = value["messages"][0]
+        # Navigate safely: entry[0].changes[0].value.messages[0]
+        entries = payload.get("entry", [])
+        if not entries:
+            return None
+        change = entries[0].get("changes", [{}])[0]
+        value = change.get("value", {})
+        messages = value.get("messages")
+        if not messages:
+            return None
+        message = messages[0]
 
         sender_phone = message["from"]
         message_id = message["id"]

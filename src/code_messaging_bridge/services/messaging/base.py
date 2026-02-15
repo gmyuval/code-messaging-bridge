@@ -44,8 +44,11 @@ class MessagingProvider(ABC):
         ...
 
     @abstractmethod
-    async def parse_inbound(self, request: Request) -> InboundMessage:
-        """Parse an incoming webhook request into a platform-agnostic InboundMessage."""
+    async def parse_inbound(self, request: Request) -> InboundMessage | None:
+        """Parse an incoming webhook request into a platform-agnostic InboundMessage.
+
+        Returns None for non-message events (e.g., status updates, delivery receipts).
+        """
         ...
 
     @abstractmethod

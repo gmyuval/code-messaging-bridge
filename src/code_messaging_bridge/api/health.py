@@ -56,7 +56,7 @@ def _check_redis() -> str:
         return "connected"
     except Exception as e:
         logger.warning("Redis health check failed: %s", e)
-        return f"error: {e}"
+        return "unavailable"
 
 
 def _check_celery() -> str:
@@ -71,4 +71,4 @@ def _check_celery() -> str:
         return "no workers"
     except Exception as e:
         logger.warning("Celery health check failed: %s", e)
-        return f"error: {e}"
+        return "unavailable"

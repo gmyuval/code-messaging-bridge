@@ -23,7 +23,7 @@ _db_manager: DatabaseSessionManager | None = None
 
 def get_db_manager() -> DatabaseSessionManager:
     """Get the global DatabaseSessionManager instance."""
-    global _db_manager  # noqa: PLW0603
+    global _db_manager
     if _db_manager is None:
         settings = get_settings()
         _db_manager = DatabaseSessionManager(
@@ -35,7 +35,7 @@ def get_db_manager() -> DatabaseSessionManager:
 
 def set_db_manager(manager: DatabaseSessionManager) -> None:
     """Set the global DatabaseSessionManager instance (for testing)."""
-    global _db_manager  # noqa: PLW0603
+    global _db_manager
     _db_manager = manager
 
 
@@ -50,7 +50,7 @@ def get_whatsapp_provider() -> MetaWhatsAppProvider:
     """FastAPI dependency that creates a Meta WhatsApp provider."""
     settings = get_settings()
     provider = ProviderFactory.create(Platform.WHATSAPP, settings)
-    assert isinstance(provider, MetaWhatsAppProvider)  # noqa: S101
+    assert isinstance(provider, MetaWhatsAppProvider)
     return provider
 
 

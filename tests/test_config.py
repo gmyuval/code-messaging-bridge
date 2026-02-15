@@ -21,6 +21,8 @@ def test_settings_default_values() -> None:
 
 def test_settings_from_env_vars() -> None:
     """Settings should load from CMB_ prefixed environment variables."""
+    old_debug = os.environ.get("CMB_DEBUG")
+    old_port = os.environ.get("CMB_PORT")
     os.environ["CMB_DEBUG"] = "true"
     os.environ["CMB_PORT"] = "9000"
     try:
@@ -30,5 +32,11 @@ def test_settings_from_env_vars() -> None:
         assert settings.debug is True
         assert settings.port == 9000
     finally:
-        del os.environ["CMB_DEBUG"]
-        del os.environ["CMB_PORT"]
+        if old_debug is None:
+            os.environ.pop("CMB_DEBUG", None)
+        else:
+            os.environ["CMB_DEBUG"] = old_debug
+        if old_port is None:
+            os.environ.pop("CMB_PORT", None)
+        else:
+            os.environ["CMB_PORT"] = old_port

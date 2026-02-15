@@ -25,7 +25,7 @@ async def test_create_conversation(async_session: AsyncSession) -> None:
     conversation = Conversation(
         platform="whatsapp",
         platform_user_id="whatsapp:+1234567890",
-        working_directory="/tmp/project",
+        working_directory="test-project",
         is_active=True,
     )
     async_session.add(conversation)
@@ -47,7 +47,7 @@ async def test_create_message(async_session: AsyncSession) -> None:
     conversation = Conversation(
         platform="whatsapp",
         platform_user_id="whatsapp:+1234567890",
-        working_directory="/tmp/project",
+        working_directory="test-project",
     )
     async_session.add(conversation)
     await async_session.flush()
@@ -76,7 +76,7 @@ async def test_conversation_message_relationship(async_session: AsyncSession) ->
     conversation = Conversation(
         platform="whatsapp",
         platform_user_id="whatsapp:+9999999999",
-        working_directory="/tmp/project",
+        working_directory="test-project",
     )
     async_session.add(conversation)
     await async_session.flush()

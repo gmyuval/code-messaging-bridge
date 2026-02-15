@@ -61,8 +61,11 @@ async def whatsapp_webhook(
     if not validation.is_valid:
         raise HTTPException(status_code=403, detail=validation.error_message)
 
-    # 2. Parse inbound message
+    # 2. Parse inbound message (None for non-message events like status updates)
     inbound = await provider.parse_inbound(request)
+    if inbound is None:
+        logger.debug("Ignoring non-message webhook event")
+        return Response(content="OK", media_type="text/plain")
     logger.info(
         "Received WhatsApp message from %s: %s",
         inbound.platform_user_id,

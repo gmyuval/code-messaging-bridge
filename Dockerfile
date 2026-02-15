@@ -14,10 +14,14 @@ RUN pip install --no-cache-dir -r requirements/base.txt
 # Copy application source
 COPY src/ src/
 COPY pyproject.toml .
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir .
 
 # Copy Alembic configuration
 COPY alembic.ini .
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash appuser
+USER appuser
 
 EXPOSE 8000
 

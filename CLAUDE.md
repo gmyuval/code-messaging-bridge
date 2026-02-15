@@ -54,7 +54,7 @@ celery -A code_messaging_bridge.workers.celery_app worker --loglevel=info
 
 ## Architecture
 
-```
+```text
 WhatsApp → Meta webhook → FastAPI (Docker) → Redis → Celery worker (HOST) → Claude CLI → Meta Graph API → WhatsApp
 ```
 

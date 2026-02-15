@@ -38,7 +38,7 @@ def conversation(sync_session: Session) -> Conversation:
     conv = Conversation(
         platform="whatsapp",
         platform_user_id="whatsapp:+1234567890",
-        working_directory="/tmp/project",
+        working_directory="test-project",
         is_active=True,
     )
     sync_session.add(conv)
@@ -53,8 +53,8 @@ def mock_settings() -> MagicMock:
     settings.claude_cli_path = "claude"
     settings.claude_max_turns = 10
     settings.meta_phone_number_id = "123456789"
-    settings.meta_access_token = "test_access_token"
-    settings.meta_app_secret = "test_app_secret"
+    settings.meta_access_token = "test_access_token"  # noqa: S105
+    settings.meta_app_secret = "test_app_secret"  # noqa: S105
     return settings
 
 
@@ -92,7 +92,7 @@ def test_process_message_success(
     mock_runner.invoke_with_retry.assert_called_once()
     invocation = mock_runner.invoke_with_retry.call_args[0][0]
     assert invocation.prompt == "What files are here?"
-    assert invocation.working_directory == "/tmp/project"
+    assert invocation.working_directory == "test-project"
 
     # Verify session ID was updated
     sync_session.refresh(conversation)
@@ -157,7 +157,7 @@ def test_process_message_claude_error(
 @patch("code_messaging_bridge.services.claude.runner.subprocess.run")
 @patch("code_messaging_bridge.services.processor.MessageProcessor._send_whatsapp_response")
 def test_process_message_resumes_session(
-    mock_send: MagicMock,
+    _mock_send: MagicMock,
     _mock_subprocess: MagicMock,
     mock_runner_cls: MagicMock,
     sync_session: Session,

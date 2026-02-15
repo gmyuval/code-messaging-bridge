@@ -24,7 +24,7 @@ def test_build_command_basic() -> None:
         working_directory="/tmp/project",
         max_turns=5,
     )
-    cmd = runner._build_command(invocation)  # noqa: SLF001
+    cmd = runner._build_command(invocation)
     assert "claude" in cmd
     assert "-p" in cmd
     assert "Hello" in cmd
@@ -40,7 +40,7 @@ def test_build_command_with_session_id() -> None:
     """Should include --resume when session_id is provided."""
     runner = ClaudeCodeRunner(_make_settings())
     invocation = ClaudeInvocation(prompt="Hello", session_id="abc-123")
-    cmd = runner._build_command(invocation)  # noqa: SLF001
+    cmd = runner._build_command(invocation)
     assert "--resume" in cmd
     assert "abc-123" in cmd
 
@@ -49,7 +49,7 @@ def test_build_command_without_session_id() -> None:
     """Should not include --resume when no session_id."""
     runner = ClaudeCodeRunner(_make_settings())
     invocation = ClaudeInvocation(prompt="Hello")
-    cmd = runner._build_command(invocation)  # noqa: SLF001
+    cmd = runner._build_command(invocation)
     assert "--resume" not in cmd
 
 
@@ -57,7 +57,7 @@ def test_build_command_with_allowed_tools() -> None:
     """Should include --allowedTools with comma-separated list."""
     runner = ClaudeCodeRunner(_make_settings())
     invocation = ClaudeInvocation(prompt="Hello", allowed_tools=["Read", "Bash"])
-    cmd = runner._build_command(invocation)  # noqa: SLF001
+    cmd = runner._build_command(invocation)
     assert "--allowedTools" in cmd
     idx = cmd.index("--allowedTools")
     assert cmd[idx + 1] == "Read,Bash"

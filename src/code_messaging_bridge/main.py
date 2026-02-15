@@ -9,6 +9,7 @@ from fastapi import FastAPI
 
 from code_messaging_bridge.api.dependencies import get_db_manager
 from code_messaging_bridge.api.health import router as health_router
+from code_messaging_bridge.api.webhooks import router as webhooks_router
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -30,6 +31,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     app.include_router(health_router, prefix="/api", tags=["health"])
+    app.include_router(webhooks_router, prefix="/api", tags=["webhooks"])
     return app
 
 

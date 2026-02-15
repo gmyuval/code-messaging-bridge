@@ -19,6 +19,7 @@ where = ["src"]
 target-version = "py314"
 line-length = 100
 src = ["src", "tests"]
+extend-exclude = ["src/code_messaging_bridge/db/migrations/versions"]
 
 [tool.ruff.lint]
 select = [

@@ -159,8 +159,8 @@ async def test_webhook_rejects_non_whitelisted_number(
     provider.parse_inbound = AsyncMock(
         return_value=InboundMessage(
             platform=Platform.WHATSAPP,
-            platform_user_id="whatsapp:+9999999999",
-            platform_message_id="SM_BAD",
+            platform_user_id="+9999999999",
+            platform_message_id="wamid.BAD",
             content="Hello",
             timestamp=datetime.now(UTC),
             raw_payload={},
@@ -171,12 +171,13 @@ async def test_webhook_rejects_non_whitelisted_number(
     # Set whitelist that doesn't include the sender
     settings = get_settings()
     original = settings.allowed_phone_numbers
-    settings.allowed_phone_numbers = ["whatsapp:+1111111111"]
+    settings.allowed_phone_numbers = ["+1111111111"]
 
     try:
         response = await client.post(
-            "/api/webhooks/twilio/whatsapp",
-            data={"Body": "Hello", "From": "whatsapp:+9999999999"},
+            "/api/webhooks/whatsapp",
+            content=b'{}',
+            headers={"Content-Type": "application/json"},
         )
         assert response.status_code == 403
         mock_task.delay.assert_not_called()
@@ -210,8 +211,8 @@ async def test_webhook_rate_limits(
     provider.parse_inbound = AsyncMock(
         return_value=InboundMessage(
             platform=Platform.WHATSAPP,
-            platform_user_id="whatsapp:+1234567890",
-            platform_message_id="SM_RL",
+            platform_user_id="+1234567890",
+            platform_message_id="wamid.RL",
             content="Hello",
             timestamp=datetime.now(UTC),
             raw_payload={},
@@ -223,8 +224,9 @@ async def test_webhook_rate_limits(
 
     try:
         response = await client.post(
-            "/api/webhooks/twilio/whatsapp",
-            data={"Body": "Hello", "From": "whatsapp:+1234567890"},
+            "/api/webhooks/whatsapp",
+            content=b'{}',
+            headers={"Content-Type": "application/json"},
         )
         assert response.status_code == 429
         mock_task.delay.assert_not_called()

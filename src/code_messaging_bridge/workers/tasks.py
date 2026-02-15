@@ -84,16 +84,28 @@ def process_whatsapp_message(
 def _send_error_message(settings: Settings, recipient_id: str) -> None:
     """Send a user-friendly error message via WhatsApp when processing fails."""
     try:
-        from twilio.rest import Client
+        import httpx
 
-        client = Client(settings.twilio_account_sid, settings.twilio_auth_token)
-        client.messages.create(
-            body=(
-                "Sorry, something went wrong while processing your message. "
-                "Please try again in a moment."
-            ),
-            from_=f"whatsapp:{settings.twilio_whatsapp_number}",
-            to=recipient_id,
+        url = (
+            f"https://graph.facebook.com/v21.0/"
+            f"{settings.meta_phone_number_id}/messages"
         )
+        headers = {
+            "Authorization": f"Bearer {settings.meta_access_token}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": recipient_id,
+            "type": "text",
+            "text": {
+                "body": (
+                    "Sorry, something went wrong while processing your message. "
+                    "Please try again in a moment."
+                ),
+            },
+        }
+        httpx.post(url, json=payload, headers=headers, timeout=30)
     except Exception:
         logger.exception("Failed to send error message to %s", recipient_id)

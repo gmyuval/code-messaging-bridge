@@ -10,8 +10,8 @@ from code_messaging_bridge.config import get_settings
 from code_messaging_bridge.db.session import DatabaseSessionManager
 from code_messaging_bridge.services.conversation_service import ConversationService
 from code_messaging_bridge.services.messaging.factory import ProviderFactory
+from code_messaging_bridge.services.messaging.meta_whatsapp import MetaWhatsAppProvider
 from code_messaging_bridge.services.messaging.schemas import Platform
-from code_messaging_bridge.services.messaging.twilio_whatsapp import TwilioWhatsAppProvider
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -46,11 +46,11 @@ async def get_async_session() -> AsyncIterator[AsyncSession]:
         yield session
 
 
-def get_whatsapp_provider() -> TwilioWhatsAppProvider:
-    """FastAPI dependency that creates a Twilio WhatsApp provider."""
+def get_whatsapp_provider() -> MetaWhatsAppProvider:
+    """FastAPI dependency that creates a Meta WhatsApp provider."""
     settings = get_settings()
     provider = ProviderFactory.create(Platform.WHATSAPP, settings)
-    assert isinstance(provider, TwilioWhatsAppProvider)  # noqa: S101
+    assert isinstance(provider, MetaWhatsAppProvider)  # noqa: S101
     return provider
 
 

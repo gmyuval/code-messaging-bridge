@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar
 
+from code_messaging_bridge.services.messaging.meta_whatsapp import MetaWhatsAppProvider
 from code_messaging_bridge.services.messaging.schemas import Platform
-from code_messaging_bridge.services.messaging.twilio_whatsapp import TwilioWhatsAppProvider
 
 if TYPE_CHECKING:
     from code_messaging_bridge.config import Settings
@@ -16,7 +16,7 @@ class ProviderFactory:
     """Factory for creating messaging providers from configuration."""
 
     _registry: ClassVar[dict[Platform, type[MessagingProvider]]] = {
-        Platform.WHATSAPP: TwilioWhatsAppProvider,
+        Platform.WHATSAPP: MetaWhatsAppProvider,
     }
 
     @classmethod
@@ -33,11 +33,11 @@ class ProviderFactory:
             raise ValueError(msg)
 
         if platform == Platform.WHATSAPP:
-            return TwilioWhatsAppProvider(
-                account_sid=settings.twilio_account_sid,
-                auth_token=settings.twilio_auth_token,
-                whatsapp_number=settings.twilio_whatsapp_number,
-                webhook_base_url=settings.webhook_base_url,
+            return MetaWhatsAppProvider(
+                phone_number_id=settings.meta_phone_number_id,
+                access_token=settings.meta_access_token,
+                app_secret=settings.meta_app_secret,
+                verify_token=settings.meta_verify_token,
             )
 
         msg = f"Unsupported platform: {platform}"

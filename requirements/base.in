@@ -8,5 +8,4 @@ psycopg2-binary>=2.9
 alembic>=1.14
 celery[redis]>=5.4
 redis>=5.2
-twilio>=9.4
 httpx>=0.28

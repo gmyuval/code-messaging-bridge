@@ -51,9 +51,9 @@ def mock_settings() -> MagicMock:
     settings = MagicMock()
     settings.claude_cli_path = "claude"
     settings.claude_max_turns = 10
-    settings.twilio_account_sid = "ACtest"
-    settings.twilio_auth_token = "test_token"
-    settings.twilio_whatsapp_number = "+14155551234"
+    settings.meta_phone_number_id = "123456789"
+    settings.meta_access_token = "test_access_token"
+    settings.meta_app_secret = "test_app_secret"
     return settings
 
 
@@ -191,7 +191,7 @@ def test_full_pipeline_long_response_split(
     })
     mock_subprocess.return_value = MagicMock(returncode=0, stdout=claude_output, stderr="")
 
-    # Use real _send_whatsapp_response but mock the Twilio client
+    # Use real _send_whatsapp_response but mock the HTTP client
     patch_target = (
         "code_messaging_bridge.services.processor.MessageProcessor._send_whatsapp_response"
     )

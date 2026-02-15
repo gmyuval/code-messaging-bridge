@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi.responses import PlainTextResponse
 
 from code_messaging_bridge.api.dependencies import (
     get_async_session,
@@ -19,7 +20,7 @@ from code_messaging_bridge.workers.tasks import process_whatsapp_message
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
-    from code_messaging_bridge.services.messaging.twilio_whatsapp import TwilioWhatsAppProvider
+    from code_messaging_bridge.services.messaging.meta_whatsapp import MetaWhatsAppProvider
 
 logger = logging.getLogger(__name__)
 
@@ -29,10 +30,27 @@ router = APIRouter()
 _rate_limiter = RateLimiter(max_requests=10, window_seconds=60)
 
 
-@router.post("/webhooks/twilio/whatsapp")
-async def twilio_whatsapp_webhook(
+@router.get("/webhooks/whatsapp")
+async def whatsapp_webhook_verify(
     request: Request,
-    provider: TwilioWhatsAppProvider = Depends(get_whatsapp_provider),
+    provider: MetaWhatsAppProvider = Depends(get_whatsapp_provider),
+) -> Response:
+    """Handle Meta webhook verification challenge."""
+    mode = request.query_params.get("hub.mode")
+    token = request.query_params.get("hub.verify_token")
+    challenge = request.query_params.get("hub.challenge")
+
+    result = provider.verify_challenge(mode, token, challenge)
+    if result is not None:
+        return PlainTextResponse(content=result)
+
+    raise HTTPException(status_code=403, detail="Verification failed")
+
+
+@router.post("/webhooks/whatsapp")
+async def whatsapp_webhook(
+    request: Request,
+    provider: MetaWhatsAppProvider = Depends(get_whatsapp_provider),
     db: AsyncSession = Depends(get_async_session),
 ) -> Response:
     """Receive inbound WhatsApp messages and enqueue Claude processing."""
@@ -85,5 +103,5 @@ async def twilio_whatsapp_webhook(
         inbound.platform_user_id,
     )
 
-    # 9. Return empty TwiML (response sent asynchronously via Celery)
-    return Response(content="<Response/>", media_type="application/xml")
+    # 9. Acknowledge receipt
+    return Response(content="OK", media_type="text/plain")

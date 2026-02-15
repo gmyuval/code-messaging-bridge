@@ -23,10 +23,11 @@ class Settings(BaseSettings):
     # Redis
     redis_url: str = "redis://localhost:6379/0"
 
-    # Twilio
-    twilio_account_sid: str = ""
-    twilio_auth_token: str = ""
-    twilio_whatsapp_number: str = ""
+    # Meta WhatsApp Business API
+    meta_phone_number_id: str = ""
+    meta_access_token: str = ""
+    meta_verify_token: str = ""
+    meta_app_secret: str = ""
 
     # Claude Code
     claude_cli_path: str = "claude"

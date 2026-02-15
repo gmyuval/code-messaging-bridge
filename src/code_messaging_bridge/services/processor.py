@@ -25,7 +25,7 @@ class MessageProcessor:
     """Orchestrates the full message processing pipeline.
 
     Load conversation → invoke Claude CLI → format response →
-    send via Twilio → store outbound message.
+    send via Meta WhatsApp API → store outbound message.
 
     Designed for synchronous execution inside Celery workers.
     """
@@ -78,7 +78,7 @@ class MessageProcessor:
         else:
             response_text = f"Sorry, I encountered an error: {result.error_message}"
 
-        # 6. Send via Twilio
+        # 6. Send via Meta WhatsApp API
         self._send_whatsapp_response(platform_user_id, response_text)
 
         # 7. Store outbound message
@@ -92,14 +92,24 @@ class MessageProcessor:
         self._session.flush()
 
     def _send_whatsapp_response(self, recipient_id: str, text: str) -> None:
-        """Send a response to the user via Twilio WhatsApp."""
-        from twilio.rest import Client
+        """Send a response to the user via Meta WhatsApp Business API."""
+        import httpx
 
-        client = Client(
-            self._settings.twilio_account_sid,
-            self._settings.twilio_auth_token,
+        url = (
+            f"https://graph.facebook.com/v21.0/"
+            f"{self._settings.meta_phone_number_id}/messages"
         )
+        headers = {
+            "Authorization": f"Bearer {self._settings.meta_access_token}",
+            "Content-Type": "application/json",
+        }
         parts = self._splitter.split(text)
-        from_number = f"whatsapp:{self._settings.twilio_whatsapp_number}"
         for part in parts:
-            client.messages.create(body=part, from_=from_number, to=recipient_id)
+            payload = {
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": recipient_id,
+                "type": "text",
+                "text": {"body": part},
+            }
+            httpx.post(url, json=payload, headers=headers, timeout=30)

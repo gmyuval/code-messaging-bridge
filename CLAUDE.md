@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A bridge that routes WhatsApp messages (via Twilio) to a local Claude Code CLI instance. Users can text a WhatsApp number and have Claude Code execute tasks on their codebase, with responses sent back via WhatsApp.
+A bridge that routes WhatsApp messages (via Meta WhatsApp Business API) to a local Claude Code CLI instance. Users can text a WhatsApp number and have Claude Code execute tasks on their codebase, with responses sent back via WhatsApp.
 
 ## Tech Stack
 
 - **Python 3.14** with Conda (`cmb` env) and pip-tools for locked dependencies
 - **FastAPI** async webhook server
-- **Twilio** WhatsApp API
+- **Meta WhatsApp Business API** (Cloud API via httpx)
 - **Claude Code CLI** invoked via subprocess
 - **Celery + Redis** async task queue
 - **PostgreSQL 17** conversation/message storage
@@ -55,7 +55,7 @@ celery -A code_messaging_bridge.workers.celery_app worker --loglevel=info
 ## Architecture
 
 ```
-WhatsApp → Twilio webhook → FastAPI (Docker) → Redis → Celery worker (HOST) → Claude CLI → Twilio → WhatsApp
+WhatsApp → Meta webhook → FastAPI (Docker) → Redis → Celery worker (HOST) → Claude CLI → Meta Graph API → WhatsApp
 ```
 
 The Celery worker runs on the HOST machine (not Docker) because Claude Code CLI needs local filesystem access. Docker Compose runs PostgreSQL, Redis, and the FastAPI API server.
@@ -67,7 +67,7 @@ The Celery worker runs on the HOST machine (not Docker) because Claude Code CLI 
   - `models/` — SQLAlchemy models (Conversation, Message)
   - `db/` — session manager (async + sync), Alembic migrations
   - `api/` — FastAPI routes (health, webhooks)
-  - `services/messaging/` — abstract MessagingProvider + Twilio implementation
+  - `services/messaging/` — abstract MessagingProvider + Meta WhatsApp implementation
   - `services/claude/` — Claude Code CLI subprocess wrapper
   - `workers/` — Celery tasks
 

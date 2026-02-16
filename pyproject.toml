@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=75.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "code-messaging-bridge"
+version = "0.1.0"
+description = "WhatsApp-to-Claude Code messaging bridge"
+requires-python = ">=3.14"
+license = "Apache-2.0"
+authors = [
+    { name = "Yuval Moran" },
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+src = ["src", "tests"]
+extend-exclude = ["src/code_messaging_bridge/db/migrations/versions"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "W",    # pycodestyle warnings
+    "UP",   # pyupgrade
+    "ANN",  # flake8-annotations
+    "B",    # flake8-bugbear
+    "A",    # flake8-builtins
+    "COM",  # flake8-commas
+    "C4",   # flake8-comprehensions
+    "RET",  # flake8-return
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+    "PTH",  # flake8-use-pathlib
+]
+ignore = [
+    "COM812",  # trailing comma (conflicts with formatter)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN401"]  # allow Any in test fixtures
+"src/code_messaging_bridge/api/*" = ["B008"]  # Depends() in function defaults is standard FastAPI
+"src/code_messaging_bridge/models/*" = ["TCH003", "TCH001"]  # SQLAlchemy needs runtime type imports for Mapped[]
+
+[tool.ruff.lint.isort]
+known-first-party = ["code_messaging_bridge"]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+plugins = ["pydantic.mypy"]
+mypy_path = "src"
+exclude = ["migrations"]
+
+[[tool.mypy.overrides]]
+module = "celery.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

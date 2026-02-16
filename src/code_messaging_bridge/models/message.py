@@ -53,7 +53,7 @@ class Message(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         nullable=False,
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    platform_message_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    platform_message_id: Mapped[str | None] = mapped_column(String(255), nullable=True, unique=True)
     status: Mapped[MessageStatus] = mapped_column(
         SQLAlchemyEnum(MessageStatus),
         default=MessageStatus.RECEIVED,

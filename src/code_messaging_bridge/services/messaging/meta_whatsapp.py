@@ -141,9 +141,7 @@ class MetaWhatsAppProvider(MessagingProvider):
                     "text": {"body": part},
                 }
                 try:
-                    resp = await client.post(
-                        url, json=payload, headers=headers, timeout=30
-                    )
+                    resp = await client.post(url, json=payload, headers=headers, timeout=30)
                     resp.raise_for_status()
                     data = resp.json()
                     last_message_id = data.get("messages", [{}])[0].get("id")

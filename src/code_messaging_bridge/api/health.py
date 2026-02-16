@@ -34,9 +34,7 @@ async def health_check(
     redis_status = _check_redis()
     celery_status = _check_celery()
 
-    all_ok = all(
-        s in {"connected", "available"} for s in [db_status, redis_status, celery_status]
-    )
+    all_ok = all(s in {"connected", "available"} for s in [db_status, redis_status, celery_status])
     return {
         "status": "healthy" if all_ok else "degraded",
         "database": db_status,

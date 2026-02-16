@@ -66,15 +66,17 @@ def test_build_command_with_allowed_tools() -> None:
 @patch("code_messaging_bridge.services.claude.runner.subprocess.run")
 def test_invoke_success(mock_run: MagicMock) -> None:
     """Should parse successful JSON output from Claude CLI."""
-    output = json.dumps({
-        "type": "result",
-        "result": "Here is your answer.",
-        "session_id": "sess-456",
-        "cost_usd": 0.05,
-        "duration_ms": 5000,
-        "num_turns": 3,
-        "is_error": False,
-    })
+    output = json.dumps(
+        {
+            "type": "result",
+            "result": "Here is your answer.",
+            "session_id": "sess-456",
+            "cost_usd": 0.05,
+            "duration_ms": 5000,
+            "num_turns": 3,
+            "is_error": False,
+        }
+    )
     mock_run.return_value = subprocess.CompletedProcess(
         args=[], returncode=0, stdout=output, stderr=""
     )
@@ -107,11 +109,13 @@ def test_invoke_cli_error(mock_run: MagicMock) -> None:
 @patch("code_messaging_bridge.services.claude.runner.subprocess.run")
 def test_invoke_is_error_flag(mock_run: MagicMock) -> None:
     """Should detect is_error flag in JSON output."""
-    output = json.dumps({
-        "result": "Something went wrong",
-        "is_error": True,
-        "session_id": "sess-789",
-    })
+    output = json.dumps(
+        {
+            "result": "Something went wrong",
+            "is_error": True,
+            "session_id": "sess-789",
+        }
+    )
     mock_run.return_value = subprocess.CompletedProcess(
         args=[], returncode=0, stdout=output, stderr=""
     )

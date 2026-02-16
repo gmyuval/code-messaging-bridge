@@ -72,18 +72,18 @@ def test_full_pipeline_success(
 ) -> None:
     """Full pipeline: receive message → Claude processes → response sent → stored in DB."""
     # Mock Claude CLI returning a successful JSON response
-    claude_output = json.dumps({
-        "type": "result",
-        "result": "There are 5 files in this project.",
-        "session_id": "sess-integration-001",
-        "cost_usd": 0.03,
-        "duration_ms": 8000,
-        "num_turns": 2,
-        "is_error": False,
-    })
-    mock_subprocess.return_value = MagicMock(
-        returncode=0, stdout=claude_output, stderr=""
+    claude_output = json.dumps(
+        {
+            "type": "result",
+            "result": "There are 5 files in this project.",
+            "session_id": "sess-integration-001",
+            "cost_usd": 0.03,
+            "duration_ms": 8000,
+            "num_turns": 2,
+            "is_error": False,
+        }
     )
+    mock_subprocess.return_value = MagicMock(returncode=0, stdout=claude_output, stderr="")
 
     processor = MessageProcessor(sync_session, mock_settings)
     processor.process_message(
@@ -108,9 +108,11 @@ def test_full_pipeline_success(
     assert "5 files" in sent_text
 
     # Verify outbound message stored in DB
-    messages = sync_session.execute(
-        select(Message).where(Message.conversation_id == conversation.id)
-    ).scalars().all()
+    messages = (
+        sync_session.execute(select(Message).where(Message.conversation_id == conversation.id))
+        .scalars()
+        .all()
+    )
     assert len(messages) == 1
     assert messages[0].direction == MessageDirection.OUTBOUND
     assert messages[0].status == MessageStatus.SENT
@@ -127,11 +129,13 @@ def test_full_pipeline_session_continuity(
 ) -> None:
     """Second message should use --resume with the session ID from first message."""
     # First message
-    first_output = json.dumps({
-        "result": "First answer",
-        "session_id": "sess-first",
-        "is_error": False,
-    })
+    first_output = json.dumps(
+        {
+            "result": "First answer",
+            "session_id": "sess-first",
+            "is_error": False,
+        }
+    )
     mock_subprocess.return_value = MagicMock(returncode=0, stdout=first_output, stderr="")
 
     processor = MessageProcessor(sync_session, mock_settings)
@@ -147,11 +151,13 @@ def test_full_pipeline_session_continuity(
     assert conversation.claude_session_id == "sess-first"
 
     # Second message should pass the session ID
-    second_output = json.dumps({
-        "result": "Follow-up answer",
-        "session_id": "sess-first",
-        "is_error": False,
-    })
+    second_output = json.dumps(
+        {
+            "result": "Follow-up answer",
+            "session_id": "sess-first",
+            "is_error": False,
+        }
+    )
     mock_subprocess.return_value = MagicMock(returncode=0, stdout=second_output, stderr="")
 
     processor.process_message(
@@ -168,12 +174,16 @@ def test_full_pipeline_session_continuity(
     assert second_call_cmd[resume_idx + 1] == "sess-first"
 
     # Should have 2 outbound messages now
-    messages = sync_session.execute(
-        select(Message).where(
-            Message.conversation_id == conversation.id,
-            Message.direction == MessageDirection.OUTBOUND,
+    messages = (
+        sync_session.execute(
+            select(Message).where(
+                Message.conversation_id == conversation.id,
+                Message.direction == MessageDirection.OUTBOUND,
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(messages) == 2
 
 
@@ -188,11 +198,13 @@ def test_full_pipeline_long_response_split(
 ) -> None:
     """Long Claude responses should be split into multiple WhatsApp messages."""
     long_text = "This is a detailed explanation. " * 100  # ~3100 chars
-    claude_output = json.dumps({
-        "result": long_text,
-        "session_id": "sess-long",
-        "is_error": False,
-    })
+    claude_output = json.dumps(
+        {
+            "result": long_text,
+            "session_id": "sess-long",
+            "is_error": False,
+        }
+    )
     mock_subprocess.return_value = MagicMock(returncode=0, stdout=claude_output, stderr="")
 
     # Use real _send_whatsapp_response but mock the HTTP client

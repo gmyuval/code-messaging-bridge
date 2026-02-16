@@ -99,27 +99,33 @@ async def test_parse_inbound() -> None:
 
     payload: dict[str, Any] = {
         "object": "whatsapp_business_account",
-        "entry": [{
-            "id": "BIZ_ID",
-            "changes": [{
-                "value": {
-                    "messaging_product": "whatsapp",
-                    "metadata": {
-                        "display_phone_number": "15551234567",
-                        "phone_number_id": "123456789",
-                    },
-                    "contacts": [{"profile": {"name": "Test"}, "wa_id": "1234567890"}],
-                    "messages": [{
-                        "from": "1234567890",
-                        "id": "wamid.HBgLMTIzNDU2Nzg5MA==",
-                        "timestamp": "1700000000",
-                        "text": {"body": "Hello Claude!"},
-                        "type": "text",
-                    }],
-                },
-                "field": "messages",
-            }],
-        }],
+        "entry": [
+            {
+                "id": "BIZ_ID",
+                "changes": [
+                    {
+                        "value": {
+                            "messaging_product": "whatsapp",
+                            "metadata": {
+                                "display_phone_number": "15551234567",
+                                "phone_number_id": "123456789",
+                            },
+                            "contacts": [{"profile": {"name": "Test"}, "wa_id": "1234567890"}],
+                            "messages": [
+                                {
+                                    "from": "1234567890",
+                                    "id": "wamid.HBgLMTIzNDU2Nzg5MA==",
+                                    "timestamp": "1700000000",
+                                    "text": {"body": "Hello Claude!"},
+                                    "type": "text",
+                                }
+                            ],
+                        },
+                        "field": "messages",
+                    }
+                ],
+            }
+        ],
     }
 
     request = AsyncMock(spec=Request)

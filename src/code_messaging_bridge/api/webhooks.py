@@ -85,26 +85,33 @@ async def whatsapp_webhook(
         logger.warning("Rate limit exceeded for %s", inbound.platform_user_id)
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
 
-    # 5. Get or create conversation
+    # 5. Idempotency: skip if this message was already processed
     conversation_service = ConversationService(db)
+    if await conversation_service.message_exists(inbound.platform_message_id):
+        logger.info("Duplicate message %s, skipping", inbound.platform_message_id)
+        return Response(content="OK", media_type="text/plain")
+
+    # 6. Get or create conversation
     conversation = await conversation_service.get_or_create_conversation(
         platform=inbound.platform,
         platform_user_id=inbound.platform_user_id,
         working_directory=settings.claude_working_directory,
     )
 
-    # 6. Store inbound message
-    await conversation_service.store_inbound_message(conversation, inbound)
+    # 7. Store inbound message (returns None if duplicate)
+    stored = await conversation_service.store_inbound_message(conversation, inbound)
+    if stored is None:
+        return Response(content="OK", media_type="text/plain")
 
-    # 7. Commit so the Celery worker can see the conversation and message
+    # 8. Commit so the Celery worker can see the conversation and message
     await db.commit()
 
-    # 8. Enqueue Claude processing task
+    # 9. Enqueue Claude processing task
     process_whatsapp_message.delay(
         str(conversation.id),
         inbound.content,
         inbound.platform_user_id,
     )
 
-    # 9. Acknowledge receipt
+    # 10. Acknowledge receipt
     return Response(content="OK", media_type="text/plain")

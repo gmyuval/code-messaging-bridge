@@ -100,10 +100,7 @@ class MessageProcessor:
         """Send a response to the user via Meta WhatsApp Business API."""
         import httpx
 
-        url = (
-            f"https://graph.facebook.com/v21.0/"
-            f"{self._settings.meta_phone_number_id}/messages"
-        )
+        url = f"https://graph.facebook.com/v21.0/{self._settings.meta_phone_number_id}/messages"
         headers = {
             "Authorization": f"Bearer {self._settings.meta_access_token}",
             "Content-Type": "application/json",

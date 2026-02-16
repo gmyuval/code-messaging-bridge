@@ -31,9 +31,7 @@ class ProviderFactory:
     }
 
     @classmethod
-    def register(
-        cls, platform: Platform, factory: Callable[[Settings], MessagingProvider]
-    ) -> None:
+    def register(cls, platform: Platform, factory: Callable[[Settings], MessagingProvider]) -> None:
         """Register a factory callable for a platform."""
         cls._registry[platform] = factory
 

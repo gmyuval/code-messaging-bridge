@@ -86,10 +86,7 @@ def _send_error_message(settings: Settings, recipient_id: str) -> None:
     try:
         import httpx
 
-        url = (
-            f"https://graph.facebook.com/v21.0/"
-            f"{settings.meta_phone_number_id}/messages"
-        )
+        url = f"https://graph.facebook.com/v21.0/{settings.meta_phone_number_id}/messages"
         headers = {
             "Authorization": f"Bearer {settings.meta_access_token}",
             "Content-Type": "application/json",

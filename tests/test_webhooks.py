@@ -46,24 +46,33 @@ def _meta_webhook_payload(body: str = "Hello Claude!", sender: str = "1234567890
     """Build a minimal Meta WhatsApp webhook payload."""
     return {
         "object": "whatsapp_business_account",
-        "entry": [{
-            "id": "BIZ_ID",
-            "changes": [{
-                "value": {
-                    "messaging_product": "whatsapp",
-                    "metadata": {"display_phone_number": "15551234567", "phone_number_id": "123"},
-                    "contacts": [{"profile": {"name": "Test"}, "wa_id": sender}],
-                    "messages": [{
-                        "from": sender,
-                        "id": "wamid.TEST",
-                        "timestamp": "1700000000",
-                        "text": {"body": body},
-                        "type": "text",
-                    }],
-                },
-                "field": "messages",
-            }],
-        }],
+        "entry": [
+            {
+                "id": "BIZ_ID",
+                "changes": [
+                    {
+                        "value": {
+                            "messaging_product": "whatsapp",
+                            "metadata": {
+                                "display_phone_number": "15551234567",
+                                "phone_number_id": "123",
+                            },
+                            "contacts": [{"profile": {"name": "Test"}, "wa_id": sender}],
+                            "messages": [
+                                {
+                                    "from": sender,
+                                    "id": "wamid.TEST",
+                                    "timestamp": "1700000000",
+                                    "text": {"body": body},
+                                    "type": "text",
+                                }
+                            ],
+                        },
+                        "field": "messages",
+                    }
+                ],
+            }
+        ],
     }
 
 

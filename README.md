@@ -4,7 +4,7 @@ A bridge that routes WhatsApp messages to a local [Claude Code](https://claude.a
 
 ## Architecture
 
-```
+```text
 WhatsApp User
     |
     v

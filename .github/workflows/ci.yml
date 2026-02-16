@@ -18,9 +18,20 @@ jobs:
 
       - uses: conda-incubator/setup-miniconda@v3
         with:
+          miniforge-variant: Miniforge3
           python-version: "3.14"
           activate-environment: cmb
           auto-activate-base: false
+          channels: conda-forge
+          channel-priority: strict
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements/*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Install dependencies
         run: |

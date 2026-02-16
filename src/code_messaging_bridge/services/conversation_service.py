@@ -60,17 +60,13 @@ class ConversationService:
             return conversation
         except IntegrityError:
             logger.info(
-                "Concurrent conversation creation for %s:%s, retrying SELECT",
+                "Concurrent conversation creation for %s, retrying SELECT",
                 platform.value,
-                platform_user_id,
             )
             await self._session.rollback()
             conversation = await self._find_active_conversation(platform, platform_user_id)
             if conversation is None:
-                msg = (
-                    f"Failed to find conversation after IntegrityError "
-                    f"for {platform.value}:{platform_user_id}"
-                )
+                msg = f"Failed to find conversation after IntegrityError for {platform.value}"
                 raise RuntimeError(msg) from None
             return conversation
 
@@ -93,8 +89,14 @@ class ConversationService:
         self,
         conversation: Conversation,
         inbound: InboundMessage,
-    ) -> Message:
-        """Persist an inbound message."""
+    ) -> Message | None:
+        """Persist an inbound message.
+
+        Returns None if a message with the same platform_message_id already
+        exists (duplicate webhook delivery). The messages table has a unique
+        constraint on platform_message_id to guarantee idempotency even under
+        concurrent requests.
+        """
         message = Message(
             conversation_id=conversation.id,
             direction=MessageDirection.INBOUND,
@@ -104,7 +106,12 @@ class ConversationService:
             metadata_={"raw_payload": inbound.raw_payload},
         )
         self._session.add(message)
-        await self._session.flush()
+        try:
+            await self._session.flush()
+        except IntegrityError:
+            logger.info("Duplicate message %s, skipping store", inbound.platform_message_id)
+            await self._session.rollback()
+            return None
         return message
 
     async def store_outbound_message(
@@ -140,9 +147,7 @@ class ConversationService:
     async def message_exists(self, platform_message_id: str) -> bool:
         """Check if a message with the given platform_message_id already exists."""
         result = await self._session.execute(
-            select(Message.id).where(
-                Message.platform_message_id == platform_message_id,
-            )
+            select(Message.id).where(Message.platform_message_id == platform_message_id).limit(1)
         )
         return result.scalar_one_or_none() is not None
 

@@ -99,9 +99,11 @@ def test_process_message_success(
     assert conversation.claude_session_id == "sess-new-123"
 
     # Verify outbound message was stored
-    messages = sync_session.execute(
-        select(Message).where(Message.conversation_id == conversation.id)
-    ).scalars().all()
+    messages = (
+        sync_session.execute(select(Message).where(Message.conversation_id == conversation.id))
+        .scalars()
+        .all()
+    )
     assert len(messages) == 1
     assert messages[0].direction == MessageDirection.OUTBOUND
     assert messages[0].content == "Here is the answer."
@@ -146,9 +148,11 @@ def test_process_message_claude_error(
     assert "CLI timed out" in sent_text
 
     # Verify outbound message was stored with error text
-    messages = sync_session.execute(
-        select(Message).where(Message.conversation_id == conversation.id)
-    ).scalars().all()
+    messages = (
+        sync_session.execute(select(Message).where(Message.conversation_id == conversation.id))
+        .scalars()
+        .all()
+    )
     assert len(messages) == 1
     assert "error" in messages[0].content.lower()
 

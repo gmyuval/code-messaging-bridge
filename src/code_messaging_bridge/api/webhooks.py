@@ -98,8 +98,10 @@ async def whatsapp_webhook(
         working_directory=settings.claude_working_directory,
     )
 
-    # 7. Store inbound message
-    await conversation_service.store_inbound_message(conversation, inbound)
+    # 7. Store inbound message (returns None if duplicate)
+    stored = await conversation_service.store_inbound_message(conversation, inbound)
+    if stored is None:
+        return Response(content="OK", media_type="text/plain")
 
     # 8. Commit so the Celery worker can see the conversation and message
     await db.commit()

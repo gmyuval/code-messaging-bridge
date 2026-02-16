@@ -176,7 +176,7 @@ async def test_webhook_rejects_non_whitelisted_number(
     try:
         response = await client.post(
             "/api/webhooks/whatsapp",
-            content=b'{}',
+            content=b"{}",
             headers={"Content-Type": "application/json"},
         )
         assert response.status_code == 403
@@ -225,7 +225,7 @@ async def test_webhook_rate_limits(
     try:
         response = await client.post(
             "/api/webhooks/whatsapp",
-            content=b'{}',
+            content=b"{}",
             headers={"Content-Type": "application/json"},
         )
         assert response.status_code == 429

@@ -29,12 +29,12 @@ def upgrade() -> None:
         ["platform", "platform_user_id", "is_active"],
     )
 
-    # Index for webhook idempotency lookups by platform_message_id
+    # Unique index for webhook idempotency — prevents duplicate message storage
     op.create_index(
         "ix_messages_platform_message_id",
         "messages",
         ["platform_message_id"],
-        unique=False,
+        unique=True,
     )
 
 

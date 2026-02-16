@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: "3.14"
+          activate-environment: cmb
+          auto-activate-base: false
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements/base.txt -r requirements/dev.txt
+          pip install -e .
+
+      - name: Ruff lint
+        run: python -m ruff check src/ tests/
+
+      - name: Ruff format check
+        run: python -m ruff format --check src/ tests/
+
+      - name: Mypy type check
+        run: python -m mypy --config-file=pyproject.toml src/
+
+      - name: Run tests
+        run: python -m pytest tests/ -x -q

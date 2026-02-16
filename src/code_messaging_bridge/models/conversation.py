@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, String
+from sqlalchemy import Boolean, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from code_messaging_bridge.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -21,6 +21,14 @@ class Conversation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     """
 
     __tablename__ = "conversations"
+    __table_args__ = (
+        UniqueConstraint(
+            "platform",
+            "platform_user_id",
+            "is_active",
+            name="uq_active_conversation",
+        ),
+    )
 
     platform: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     platform_user_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)

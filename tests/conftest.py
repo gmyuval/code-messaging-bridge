@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -9,9 +10,12 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import StaticPool
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from code_messaging_bridge.api.dependencies import get_async_session
-from code_messaging_bridge.main import create_app
-from code_messaging_bridge.models import Base
+# Ensure tests run in debug mode (skips Meta API credential validation)
+os.environ.setdefault("CMB_DEBUG", "true")
+
+from code_messaging_bridge.api.dependencies import get_async_session  # noqa: E402
+from code_messaging_bridge.main import create_app  # noqa: E402
+from code_messaging_bridge.models import Base  # noqa: E402
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator

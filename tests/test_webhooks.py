@@ -170,13 +170,37 @@ async def test_webhook_creates_conversation_once(
     mock_task: MagicMock,
     client: AsyncClient,
     app: Any,
-    mock_whatsapp_provider: MagicMock,
     async_session: AsyncSession,
 ) -> None:
     """Multiple messages from the same user should reuse the same conversation."""
-    from code_messaging_bridge.api.dependencies import get_whatsapp_provider
+    from datetime import UTC, datetime
 
-    app.dependency_overrides[get_whatsapp_provider] = lambda: mock_whatsapp_provider
+    from code_messaging_bridge.api.dependencies import get_whatsapp_provider
+    from code_messaging_bridge.services.messaging.schemas import (
+        InboundMessage,
+        Platform,
+        WebhookValidationResult,
+    )
+
+    # Each message has a different platform_message_id (not a duplicate)
+    call_count = 0
+
+    async def parse_inbound_side_effect(*_args: Any, **_kwargs: Any) -> InboundMessage:
+        nonlocal call_count
+        call_count += 1
+        return InboundMessage(
+            platform=Platform.WHATSAPP,
+            platform_user_id="1234567890",
+            platform_message_id=f"wamid.MSG_{call_count}",
+            content=f"Message {call_count}",
+            timestamp=datetime.now(UTC),
+            raw_payload={},
+        )
+
+    provider = MagicMock()
+    provider.validate_webhook = AsyncMock(return_value=WebhookValidationResult(is_valid=True))
+    provider.parse_inbound = AsyncMock(side_effect=parse_inbound_side_effect)
+    app.dependency_overrides[get_whatsapp_provider] = lambda: provider
 
     # Send two messages
     await client.post(
@@ -202,6 +226,46 @@ async def test_webhook_creates_conversation_once(
 
     # Both tasks enqueued
     assert mock_task.delay.call_count == 2
+
+    app.dependency_overrides.pop(get_whatsapp_provider, None)
+
+
+@pytest.mark.asyncio
+@patch("code_messaging_bridge.api.webhooks.process_whatsapp_message")
+async def test_webhook_idempotency_skips_duplicate(
+    mock_task: MagicMock,
+    client: AsyncClient,
+    app: Any,
+    mock_whatsapp_provider: MagicMock,
+    async_session: AsyncSession,
+) -> None:
+    """Duplicate webhook delivery (same platform_message_id) should be idempotent."""
+    from code_messaging_bridge.api.dependencies import get_whatsapp_provider
+
+    app.dependency_overrides[get_whatsapp_provider] = lambda: mock_whatsapp_provider
+
+    # First delivery
+    r1 = await client.post(
+        "/api/webhooks/whatsapp",
+        content=json.dumps(_meta_webhook_payload()),
+        headers={"Content-Type": "application/json"},
+    )
+    assert r1.status_code == 200
+
+    # Second delivery (same message ID from mock fixture)
+    r2 = await client.post(
+        "/api/webhooks/whatsapp",
+        content=json.dumps(_meta_webhook_payload()),
+        headers={"Content-Type": "application/json"},
+    )
+    assert r2.status_code == 200
+
+    # Only one message stored, only one task enqueued
+    msg_result = await async_session.execute(select(Message))
+    messages = msg_result.scalars().all()
+    assert len(messages) == 1
+
+    mock_task.delay.assert_called_once()
 
     app.dependency_overrides.pop(get_whatsapp_provider, None)
 
